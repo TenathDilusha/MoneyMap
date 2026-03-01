@@ -12,9 +12,13 @@ export default function TransactionsList({ transactions, onDelete, limit }) {
     );
   }
 
-  function handleDelete(id) {
-    deleteTransaction(id);
-    onDelete?.();
+  async function handleDelete(id) {
+    try {
+      await deleteTransaction(id);
+      onDelete?.();
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
   }
 
   return (

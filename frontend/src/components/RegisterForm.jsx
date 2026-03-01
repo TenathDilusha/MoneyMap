@@ -15,12 +15,12 @@ const RegisterForm = () => {
     setError("");
     setLoading(true);
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", {
-        username,
-        email,
-        password,
-      });
-      localStorage.setItem("token", res.data.token);
+      const res = await axios.post(
+        "http://localhost:5000/api/auth/register",
+        { username, email, password },
+        { withCredentials: true }
+      );
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       window.location.href = "/";
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");

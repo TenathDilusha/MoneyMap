@@ -18,15 +18,19 @@ export default function AddTransactionModal({ onClose, onAdded }) {
 
   const cats = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!description.trim()) { setError('Please enter a description.'); return; }
     if (!amount || parseFloat(amount) <= 0) { setError('Please enter a valid amount.'); return; }
     if (!category) { setError('Please select a category.'); return; }
     setError('');
-    addTransaction({ type, description: description.trim(), amount: parseFloat(amount), category, date });
-    onAdded?.();
-    onClose();
+    try {
+      await addTransaction({ type, description: description.trim(), amount: parseFloat(amount), category, date });
+      onAdded?.();
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to add transaction.');
+    }
   }
 
   return (

@@ -1,55 +1,37 @@
-const STORAGE_KEY = 'moneymap_transactions';
+import axios from 'axios';
 
-// ── Seed data for first-time users ──────────────────────────────────────────
-const SEED = [
-  { id: '1', type: 'income',  category: 'salary',        description: 'Monthly Salary',      amount: 3500,  date: '2026-02-01' },
-  { id: '2', type: 'expense', category: 'rent',           description: 'Apartment Rent',      amount: 950,   date: '2026-02-02' },
-  { id: '3', type: 'expense', category: 'food',           description: 'Grocery Store',       amount: 120,   date: '2026-02-04' },
-  { id: '4', type: 'income',  category: 'freelance',      description: 'Freelance Project',   amount: 800,   date: '2026-02-06' },
-  { id: '5', type: 'expense', category: 'transport',      description: 'Monthly Bus Pass',    amount: 55,    date: '2026-02-07' },
-  { id: '6', type: 'expense', category: 'entertainment',  description: 'Netflix & Spotify',   amount: 30,    date: '2026-02-08' },
-  { id: '7', type: 'expense', category: 'health',         description: 'Gym Membership',      amount: 45,    date: '2026-02-10' },
-  { id: '8', type: 'expense', category: 'shopping',       description: 'Clothes & Shoes',     amount: 210,   date: '2026-02-12' },
-  { id: '9', type: 'expense', category: 'utilities',      description: 'Electricity Bill',    amount: 70,    date: '2026-02-14' },
-  { id:'10', type: 'expense', category: 'food',           description: 'Restaurant Dinner',   amount: 65,    date: '2026-02-16' },
-  { id:'11', type: 'income',  category: 'freelance',      description: 'Design Consultation', amount: 350,   date: '2026-02-17' },
-  { id:'12', type: 'expense', category: 'other',          description: 'Birthday Gift',       amount: 80,    date: '2026-02-18' },
-];
+const api = axios.create({
+  baseURL: 'http://localhost:5000/api',
+  withCredentials: true,
+});
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED));
-    return SEED;
-  } catch {
-    return SEED;
-  }
-}
-function save(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-function uid() {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+// ── Real backend calls ────────────────────────────────────────────────────────
+const toDateStr = (d) => {
+  if (!d) return '';
+  // already YYYY-MM-DD string
+  if (typeof d === 'string') return d.slice(0, 10);
+  // Date object
+  if (d instanceof Date) return d.toISOString().slice(0, 10);
+  return String(d).slice(0, 10);
+};
+
+export async function getTransactions() {
+  const res = await api.get('/expenses');
+  return res.data.map(t => ({
+    ...t,
+    type: t.type || 'expense',
+    amount: parseFloat(t.amount),
+    date: toDateStr(t.date),
+  })).sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
-// ── API ──────────────────────────────────────────────────────────────────────
-export function getTransactions() {
-  return [...load()].sort((a, b) => new Date(b.date) - new Date(a.date));
+export async function addTransaction(tx) {
+  const res = await api.post('/expenses', tx);
+  return res.data;
 }
 
-export function addTransaction(tx) {
-  const all = load();
-  const entry = { ...tx, id: uid() };
-  all.unshift(entry);
-  save(all);
-  return entry;
-}
-
-export function deleteTransaction(id) {
-  const all = load().filter(t => t.id !== id);
-  save(all);
+export async function deleteTransaction(id) {
+  await api.delete(`/expenses/${id}`);
 }
 
 export function getSummary(transactions) {
@@ -71,14 +53,15 @@ export function getCategoryBreakdown(transactions) {
 export function getMonthlyData(transactions) {
   const months = {};
   transactions.forEach(t => {
-    const key = t.date.slice(0, 7); // YYYY-MM
+    const dateStr = typeof t.date === 'string' ? t.date : String(t.date).slice(0, 10);
+    const key = dateStr.slice(0, 7); // YYYY-MM
     if (!months[key]) months[key] = { month: key, income: 0, expense: 0 };
     months[key][t.type] += t.amount;
   });
   return Object.values(months)
     .sort((a, b) => a.month.localeCompare(b.month))
     .slice(-6)
-    .map(m => ({ ...m, month: new Date(m.month + '-01').toLocaleString('default', { month: 'short' }) }));
+    .map(m => ({ ...m, month: new Date(m.month + '-15').toLocaleString('default', { month: 'short' }) }));
 }
 
 export const CATEGORY_META = {
@@ -102,5 +85,6 @@ export function fmt(amount) {
 }
 
 export function fmtDate(dateStr) {
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  // Append noon-time to avoid UTC midnight falling on the previous day in local TZ
+  return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }

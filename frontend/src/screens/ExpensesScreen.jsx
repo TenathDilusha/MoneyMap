@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import TransactionsList from '../components/TransactionsList';
 import AddTransactionModal from '../components/AddTransactionModal';
 import { getTransactions, getSummary, CATEGORY_META, fmt } from '../services/api';
@@ -6,15 +6,32 @@ import { getTransactions, getSummary, CATEGORY_META, fmt } from '../services/api
 const ALL_CATS = Object.entries(CATEGORY_META).map(([id, m]) => ({ id, ...m }));
 
 export default function ExpensesScreen() {
-  const [modal, setModal]     = useState(false);
-  const [refresh, setRefresh] = useState(0);
-  const [filter, setFilter]   = useState('all');  
-  const [cat, setCat]         = useState('all');
-  const [search, setSearch]   = useState('');
-  const [sort, setSort]       = useState('date_desc');
-  const reload = useCallback(() => setRefresh(r => r + 1), []);
+  const [modal, setModal]       = useState(false);
+  const [allTxns, setAllTxns]   = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
+  const [filter, setFilter]     = useState('all');
+  const [cat, setCat]           = useState('all');
+  const [search, setSearch]     = useState('');
+  const [sort, setSort]         = useState('date_desc');
 
-  let transactions = getTransactions();
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getTransactions();
+      setAllTxns(data);
+    } catch (err) {
+      console.error('Failed to load transactions:', err);
+      setError('Failed to load transactions. Make sure the backend is running.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  let transactions = allTxns;
 
   // Filter by type
   if (filter !== 'all') transactions = transactions.filter(t => t.type === filter);
@@ -130,10 +147,16 @@ export default function ExpensesScreen() {
 
       {/* List */}
       <div className="card">
-        <TransactionsList transactions={transactions} onDelete={reload} />
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>Loading…</div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--accent-red)' }}>⚠ {error}</div>
+        ) : (
+          <TransactionsList transactions={transactions} onDelete={loadData} />
+        )}
       </div>
 
-      {modal && <AddTransactionModal onClose={() => setModal(false)} onAdded={reload} />}
+      {modal && <AddTransactionModal onClose={() => setModal(false)} onAdded={loadData} />}
     </div>
   );
 }

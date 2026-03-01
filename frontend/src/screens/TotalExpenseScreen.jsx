@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import AnalyticsCard from '../components/AnalyticsCard';
 import ExpenseCard from '../components/ExpenseCard';
 import PieChartComponent from '../components/PieChartComponent';
@@ -9,14 +9,27 @@ import {
 } from '../services/api';
 
 export default function TotalExpenseScreen() {
-  const [modal, setModal]     = useState(false);
-  const [refresh, setRefresh] = useState(0);
-  const reload = useCallback(() => setRefresh(r => r + 1), []);
+  const [modal, setModal]         = useState(false);
+  const [transactions, setTxns]   = useState([]);
+  const [loading, setLoading]     = useState(true);
 
-  const transactions = getTransactions();
-  const summary      = getSummary(transactions);
-  const breakdown    = getCategoryBreakdown(transactions);
-  const monthly      = getMonthlyData(transactions);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await getTransactions();
+      setTxns(data);
+    } catch (err) {
+      console.error('Failed to load transactions:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const summary   = getSummary(transactions);
+  const breakdown = getCategoryBreakdown(transactions);
+  const monthly   = getMonthlyData(transactions);
 
   // Top spending categories
   const topCats = breakdown.slice(0, 5);
@@ -160,7 +173,7 @@ export default function TotalExpenseScreen() {
         )}
       </div>
 
-      {modal && <AddTransactionModal onClose={() => setModal(false)} onAdded={reload} />}
+      {modal && <AddTransactionModal onClose={() => setModal(false)} onAdded={loadData} />}
     </div>
   );
 }
