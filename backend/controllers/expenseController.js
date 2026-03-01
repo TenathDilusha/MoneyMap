@@ -1,56 +1,32 @@
-// backend/controllers/expenseController.js
-const Expense = require('../models/expenseModel');
+const pool = require('../db');
 
-// @desc    Get all expenses for a user
-// @route   GET /api/expenses
-// @access  Private
-const getExpenses = async (req, res) => {
+exports.getExpenses = async (req, res) => {
   try {
-    const expenses = await Expense.find({ user: req.user.id });
-    res.json(expenses);
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    const result = await pool.query('SELECT * FROM expenses WHERE user_id=$1', [req.user]);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// @desc    Add a new expense
-// @route   POST /api/expenses
-// @access  Private
-const addExpense = async (req, res) => {
+exports.addExpense = async (req, res) => {
+  const { amount, category, description, date } = req.body;
   try {
-    const { amount, category, description, date } = req.body;
-    const expense = new Expense({
-      user: req.user.id,
-      amount,
-      category,
-      description,
-      date,
-    });
-    const savedExpense = await expense.save();
-    res.status(201).json(savedExpense);
-  } catch (error) {
-    res.status(400).json({ message: 'Invalid data' });
+    const result = await pool.query(
+      'INSERT INTO expenses (user_id, amount, category, description, date) VALUES ($1,$2,$3,$4,$5) RETURNING *',
+      [req.user, amount, category, description, date]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 };
 
-// @desc    Delete an expense
-// @route   DELETE /api/expenses/:id
-// @access  Private
-const deleteExpense = async (req, res) => {
+exports.deleteExpense = async (req, res) => {
   try {
-    const expense = await Expense.findById(req.params.id);
-    if (!expense || expense.user.toString() !== req.user.id) {
-      return res.status(404).json({ message: 'Expense not found' });
-    }
-    await expense.remove();
-    res.json({ message: 'Expense removed' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server Error' });
+    await pool.query('DELETE FROM expenses WHERE id=$1 AND user_id=$2', [req.params.id, req.user]);
+    res.json({ message: 'Expense deleted' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-};
-
-module.exports = {
-  getExpenses,
-  addExpense,
-  deleteExpense,
 };
