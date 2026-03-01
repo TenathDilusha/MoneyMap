@@ -6,7 +6,7 @@ export default function Sidebar() {
 
   const navItems = [
     { id: 'home', label: 'Dashboard', icon: '🏠', path: '/' },
-    { id: 'expenses', label: 'Transactions', icon: '💳', path: '/transactions' },
+    { id: 'expenses', label: 'Transactions', icon: '💳', path: '/expenses' },
     { id: 'analytics', label: 'Analytics', icon: '📊', path: '/analytics' },
   ];
 

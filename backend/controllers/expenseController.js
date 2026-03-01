@@ -10,11 +10,11 @@ exports.getExpenses = async (req, res) => {
 };
 
 exports.addExpense = async (req, res) => {
-  const { amount, category, description, date } = req.body;
+  const { amount, category, description, date, type } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO expenses (user_id, amount, category, description, date) VALUES ($1,$2,$3,$4,$5) RETURNING *',
-      [req.user, amount, category, description, date]
+      'INSERT INTO expenses (user_id, amount, category, description, date, type) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',
+      [req.user, amount, category, description, date, type || 'expense']
     );
     res.json(result.rows[0]);
   } catch (err) {
