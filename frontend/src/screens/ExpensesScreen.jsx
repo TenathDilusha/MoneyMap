@@ -8,7 +8,7 @@ const ALL_CATS = Object.entries(CATEGORY_META).map(([id, m]) => ({ id, ...m }));
 export default function ExpensesScreen() {
   const [modal, setModal]     = useState(false);
   const [refresh, setRefresh] = useState(0);
-  const [filter, setFilter]   = useState('all');   // all | income | expense
+  const [filter, setFilter]   = useState('all');  
   const [cat, setCat]         = useState('all');
   const [search, setSearch]   = useState('');
   const [sort, setSort]       = useState('date_desc');
@@ -51,7 +51,7 @@ export default function ExpensesScreen() {
           <p className="page-subtitle">{transactions.length} transaction{transactions.length !== 1 ? 's' : ''} found</p>
         </div>
         <button className="btn btn-primary" onClick={() => setModal(true)}>
-          ＋ Add Transaction
+          + Add Transaction
         </button>
       </div>
 

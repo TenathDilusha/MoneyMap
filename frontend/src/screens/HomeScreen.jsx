@@ -30,7 +30,7 @@ export default function HomeScreen({ onNavigate }) {
           </p>
         </div>
         <button className="btn btn-primary" onClick={() => setModal(true)}>
-          ＋ Add Transaction
+          + Add Transaction
         </button>
       </div>
 
