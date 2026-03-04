@@ -1,3 +1,7 @@
+export async function editTransaction(id, tx) {
+  const res = await api.put(`/expenses/${id}`, tx);
+  return res.data;
+}
 import axios from 'axios';
 
 const api = axios.create({

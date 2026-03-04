@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { deleteTransaction, CATEGORY_META, fmt, fmtDate } from '../services/api';
+import AddTransactionModal from './AddTransactionModal';
 
 export default function TransactionsList({ transactions, onDelete, limit }) {
+  const [editTx, setEditTx] = useState(null);
   const items = limit ? transactions.slice(0, limit) : transactions;
 
   if (items.length === 0) {
@@ -22,33 +25,50 @@ export default function TransactionsList({ transactions, onDelete, limit }) {
   }
 
   return (
-    <div>
-      {items.map(tx => {
-        const meta = CATEGORY_META[tx.category] || CATEGORY_META.other;
-        return (
-          <div key={tx.id} className="transaction-item">
-            <div className={`transaction-icon ${meta.css}`}>
-              {meta.emoji}
-            </div>
-            <div className="transaction-info">
-              <div className="transaction-name">{tx.description}</div>
-              <div className="transaction-meta">
-                {meta.label} &nbsp;·&nbsp; {fmtDate(tx.date)}
+    <>
+      <div>
+        {items.map(tx => {
+          const meta = CATEGORY_META[tx.category] || CATEGORY_META.other;
+          return (
+            <div key={tx.id} className="transaction-item">
+              <div className={`transaction-icon ${meta.css}`}>
+                {meta.emoji}
               </div>
+              <div className="transaction-info">
+                <div className="transaction-name">{tx.description}</div>
+                <div className="transaction-meta">
+                  {meta.label} &nbsp;·&nbsp; {fmtDate(tx.date)}
+                </div>
+              </div>
+              <span className={`transaction-amount ${tx.type}`}>
+                {tx.type === 'income' ? '+' : '-'}{fmt(tx.amount)}
+              </span>
+              <button
+                className="transaction-edit"
+                onClick={() => setEditTx(tx)}
+                title="Edit"
+                style={{ marginRight: 8 }}
+              >
+                ✎
+              </button>
+              <button
+                className="transaction-delete"
+                onClick={() => handleDelete(tx.id)}
+                title="Delete"
+              >
+                ✕
+              </button>
             </div>
-            <span className={`transaction-amount ${tx.type}`}>
-              {tx.type === 'income' ? '+' : '-'}{fmt(tx.amount)}
-            </span>
-            <button
-              className="transaction-delete"
-              onClick={() => handleDelete(tx.id)}
-              title="Delete"
-            >
-              ✕
-            </button>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+      {editTx && (
+        <AddTransactionModal
+          onClose={() => setEditTx(null)}
+          onAdded={() => { setEditTx(null); onDelete?.(); }}
+          initial={editTx}
+        />
+      )}
+    </>
   );
 }

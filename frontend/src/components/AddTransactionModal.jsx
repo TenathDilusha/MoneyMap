@@ -1,42 +1,59 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   addTransaction,
+  editTransaction,
   INCOME_CATEGORIES,
   EXPENSE_CATEGORIES,
   CATEGORY_META,
 } from '../services/api';
 
+
 const today = () => new Date().toISOString().slice(0, 10);
 
-export default function AddTransactionModal({ onClose, onAdded }) {
-  const [type, setType]        = useState('expense');
-  const [description, setDesc] = useState('');
-  const [amount, setAmount]    = useState('');
-  const [category, setCat]     = useState('');
-  const [date, setDate]        = useState(today());
+
+export default function AddTransactionModal({ onClose, onAdded, initial }) {
+  const isEdit = !!initial;
+  const [type, setType]        = useState(initial?.type || 'expense');
+  const [description, setDesc] = useState(initial?.description || '');
+  const [amount, setAmount]    = useState(initial?.amount?.toString() || '');
+  const [category, setCat]     = useState(initial?.category || '');
+  const [date, setDate]        = useState(initial?.date || today());
   const [error, setError]      = useState('');
+
+  useEffect(() => {
+    if (initial) {
+      setType(initial.type || 'expense');
+      setDesc(initial.description || '');
+      setAmount(initial.amount?.toString() || '');
+      setCat(initial.category || '');
+      setDate(initial.date || today());
+    }
+  }, [initial]);
 
   const cats = type === 'income' ? INCOME_CATEGORIES : EXPENSE_CATEGORIES;
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!description.trim()) { setError('Please enter a description.'); return; }
     if (!amount || parseFloat(amount) <= 0) { setError('Please enter a valid amount.'); return; }
     if (!category) { setError('Please select a category.'); return; }
     setError('');
     try {
-      await addTransaction({ type, description: description.trim(), amount: parseFloat(amount), category, date });
+      if (isEdit) {
+        await editTransaction(initial.id, { type, description: description.trim(), amount: parseFloat(amount), category, date });
+      } else {
+        await addTransaction({ type, description: description.trim(), amount: parseFloat(amount), category, date });
+      }
       onAdded?.();
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add transaction.');
+      setError(err.response?.data?.message || (isEdit ? 'Failed to edit transaction.' : 'Failed to add transaction.'));
     }
   }
 
   return (
     <div className="modal-backdrop" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
-        <div className="modal-title">Add Transaction</div>
+        <div className="modal-title">{isEdit ? 'Edit Transaction' : 'Add Transaction'}</div>
 
         {/* Type toggle */}
         <div className="type-toggle">
@@ -116,7 +133,7 @@ export default function AddTransactionModal({ onClose, onAdded }) {
 
           <div className="modal-actions">
             <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
-              ＋ Add Transaction
+              {isEdit ? '💾 Save Changes' : '＋ Add Transaction'}
             </button>
             <button type="button" className="btn btn-outline" onClick={onClose}>
               Cancel
