@@ -13,7 +13,7 @@ const setCookie = (res, token) => {
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000,
   });
-};12345
+};
 
 exports.register = async (req, res) => {
   const { username, email, password } = req.body;

@@ -4,12 +4,16 @@ import TransactionsList from '../components/TransactionsList';
 import PieChartComponent from '../components/PieChartComponent';
 import AnalyticsCard from '../components/AnalyticsCard';
 import AddTransactionModal from '../components/AddTransactionModal';
+import ReceiptScanModal from '../components/ReceiptScanModal';
 import {
   getTransactions, getSummary, getCategoryBreakdown, getMonthlyData, fmt,
 } from '../services/api';
 
 export default function HomeScreen({ onNavigate }) {
-  const [modal, setModal]           = useState(false);
+  const [modal,        setModal]        = useState(false);   // add-transaction modal
+  const [receiptModal, setReceiptModal] = useState(false);   // receipt scan modal
+  // Pre-filled initial data passed from receipt scan → add-transaction modal
+  const [receiptInitial, setReceiptInitial] = useState(null);
   const [transactions, setTxns]     = useState([]);
   const [loading, setLoading]       = useState(true);
 
@@ -42,9 +46,16 @@ export default function HomeScreen({ onNavigate }) {
             {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => setModal(true)}>
-          + Add Transaction
-        </button>
+        <div style={{ display: 'flex', gap: 10 }}>
+          {/* Receipt scan → auto-fill transaction */}
+          <button className="btn btn-receipt" onClick={() => setReceiptModal(true)}>
+            🧾 Add Receipt
+          </button>
+          {/* Manual transaction entry */}
+          <button className="btn btn-primary" onClick={() => setModal(true)}>
+            + Add Transaction
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -75,7 +86,36 @@ export default function HomeScreen({ onNavigate }) {
         </>
       )}
 
-      {modal && <AddTransactionModal onClose={() => setModal(false)} onAdded={loadData} />}
+      {/* Standard add-transaction modal (also used after receipt scan) */}
+      {modal && (
+        <AddTransactionModal
+          onClose={() => { setModal(false); setReceiptInitial(null); }}
+          onAdded={loadData}
+          initial={receiptInitial}
+        />
+      )}
+
+      {/* Receipt scan modal */}
+      {receiptModal && (
+        <ReceiptScanModal
+          onClose={() => setReceiptModal(false)}
+          onConfirm={data => {
+            setReceiptModal(false);
+            if (data) {
+              // Map scanned receipt data → AddTransactionModal's expected shape
+              setReceiptInitial({
+                type: 'expense',
+                description: data.storeName || '',
+                amount: data.total ? String(data.total) : '',
+                date: data.date || '',
+                category: 'shopping',  // sensible default; user can change it
+              });
+            }
+            // Open the transaction modal pre-filled (or blank for manual)
+            setModal(true);
+          }}
+        />
+      )}
     </div>
   );
 }

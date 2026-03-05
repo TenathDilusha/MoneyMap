@@ -12,7 +12,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 
 export default function AddTransactionModal({ onClose, onAdded, initial }) {
-  const isEdit = !!initial;
+  // isEdit is only true when an existing transaction ID is present.
+  // A receipt pre-fill passes data without an id, so it must be treated as a new entry.
+  const isEdit = !!initial?.id;
   const [type, setType]        = useState(initial?.type || 'expense');
   const [description, setDesc] = useState(initial?.description || '');
   const [amount, setAmount]    = useState(initial?.amount?.toString() || '');
