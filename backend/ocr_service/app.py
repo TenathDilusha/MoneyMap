@@ -7,41 +7,27 @@ from flask_cors import CORS
 from PIL import Image
 import pytesseract
 
-# ── App setup ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
-# Only accept calls from the Node backend (localhost)
 CORS(app, origins=["http://localhost:5000"])
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-# If Tesseract is not on PATH, set the executable path here, e.g.:
-# pytesseract.pytesseract.tesseract_cmd = r"/usr/bin/tesseract"
-
-
-# ── OCR helpers ───────────────────────────────────────────────────────────────
-
 def run_ocr(image_bytes: bytes) -> str:
     """Run Tesseract on raw image bytes and return the plain text."""
     img = Image.open(io.BytesIO(image_bytes))
 
-    # Convert to RGB if needed (handles PNG with alpha channel)
     if img.mode not in ("RGB", "L"):
         img = img.convert("RGB")
 
-    # Custom Tesseract config:
-    #   --oem 3  → default OCR engine (LSTM + legacy)
-    #   --psm 4  → assume a single column of text (good for receipts)
     text = pytesseract.image_to_string(img, lang="eng", config="--oem 3 --psm 4")
     return text
 
 
 def parse_receipt(raw: str) -> dict:
-    # Normalise: strip carriage returns, split into lines, skip blanks
     lines = [l.strip() for l in raw.replace("\r", "").split("\n")]
     lines = [l for l in lines if l]
 
-    # Compiled regexes
     PRICE_RE    = re.compile(r"(?:[\$£€]\s*)?(\d+\.\d{2})\s*$")
     DATE_RE     = re.compile(
         r"\b(\d{1,2}[\/\-\.]\d{1,2}[\/\-\.]\d{2,4}"
@@ -52,7 +38,6 @@ def parse_receipt(raw: str) -> dict:
         r"|grand\s?total|balance|amount\s?due|change|cash|discount)\b", re.I
     )
 
-    # ── Find date ─────────────────────────────────────────────────────────────
     date = ""
     date_line_idx = -1
     for i, line in enumerate(lines):
@@ -62,7 +47,6 @@ def parse_receipt(raw: str) -> dict:
             date_line_idx = i
             break
 
-    # ── Walk every line for items and totals ─────────────────────────────────
     items = []
     total = ""
     best_total_val = -1.0
@@ -76,22 +60,18 @@ def parse_receipt(raw: str) -> dict:
         price_val = float(price_str)
 
         if TOTAL_RE.search(line):
-            # Keep the highest "total-like" value
             if price_val > best_total_val:
                 best_total_val = price_val
                 total = price_str
             continue
 
-        # Strip the trailing price to get the item name
         name = PRICE_RE.sub("", line).strip()
-        # Also strip lone currency symbols and excessive spaces
         name = re.sub(r"[\$£€]\s*$", "", name).strip()
         name = re.sub(r"\s{2,}", " ", name)
 
         if len(name) > 1:
             items.append({"name": name, "price": price_str})
 
-    # ── Store name ────────────────────────────────────────────────────────────
     stop = min(date_line_idx if date_line_idx != -1 else 3, 3)
     store_lines = [
         l for l in lines[:stop]
@@ -99,7 +79,6 @@ def parse_receipt(raw: str) -> dict:
     ]
     store_name = " ".join(store_lines).strip() or "Unknown Store"
 
-    # ── Fallback total ────────────────────────────────────────────────────────
     if not total and items:
         total = f"{sum(float(it['price']) for it in items):.2f}"
 
@@ -108,11 +87,8 @@ def parse_receipt(raw: str) -> dict:
         "date": date,
         "total": total,
         "items": items,
-        "rawText": raw[:2000],   # cap to keep payload reasonable
+        "rawText": raw[:2000],  
     }
-
-
-# ── Route ─────────────────────────────────────────────────────────────────────
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -149,8 +125,6 @@ def scan():
         log.exception("OCR failed")
         return jsonify({"error": f"OCR processing failed: {exc}"}), 500
 
-
-# ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     port = int(os.environ.get("OCR_PORT", 5001))
     log.info("OCR microservice starting on port %d", port)
