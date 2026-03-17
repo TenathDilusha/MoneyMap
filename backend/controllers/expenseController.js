@@ -1,5 +1,10 @@
 const pool = require('../db');
 
+function isValidDate(date) {
+  // Accepts YYYY-MM-DD only
+  return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date);
+}
+
 exports.getExpenses = async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM expenses WHERE user_id=$1', [req.user]);
@@ -11,6 +16,9 @@ exports.getExpenses = async (req, res) => {
 
 exports.editExpense = async (req, res) => {
   const { amount, category, description, date, type } = req.body;
+  if (!isValidDate(date)) {
+    return res.status(400).json({ message: 'select the date' });
+  }
   try {
     const result = await pool.query(
       'UPDATE expenses SET amount=$1, category=$2, description=$3, date=$4, type=$5 WHERE id=$6 AND user_id=$7 RETURNING *',
@@ -27,6 +35,9 @@ exports.editExpense = async (req, res) => {
 
 exports.addExpense = async (req, res) => {
   const { amount, category, description, date, type } = req.body;
+  if (!isValidDate(date)) {
+    return res.status(400).json({ message: 'select the date' });
+  }
   try {
     const result = await pool.query(
       'INSERT INTO expenses (user_id, amount, category, description, date, type) VALUES ($1,$2,$3,$4,$5,$6) RETURNING *',

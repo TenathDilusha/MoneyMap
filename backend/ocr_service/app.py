@@ -125,7 +125,10 @@ def scan():
         log.exception("OCR failed")
         return jsonify({"error": f"OCR processing failed: {exc}"}), 500
 
+# Gunicorn entry point: app:app
+# For development, run: python app.py
+# For production, run: gunicorn app:app --bind 0.0.0.0:5001
+
 if __name__ == "__main__":
-    port = int(os.environ.get("OCR_PORT", 5001))
-    log.info("OCR microservice starting on port %d", port)
-    app.run(host="0.0.0.0", port=port, debug=False)
+    log.info("OCR microservice starting on port 5001")
+    app.run(host="0.0.0.0", port=5001)

@@ -76,6 +76,15 @@ cd backend
 npm install
 ```
 
+Install OCR Python dependencies once (required for backend auto-start):
+
+```bash
+cd ocr_service
+python3 -m venv venv
+venv/bin/pip install -r requirements.txt
+cd ..
+```
+
 Create `backend/.env`:
 
 ```env
@@ -87,21 +96,23 @@ NODE_ENV=development
 Start the server:
 
 ```bash
-node server.js          # production
-npx nodemon server.js   # development (auto-reload)
+node server.js       
 ```
 
 Runs on **http://localhost:5000**
+Also auto-starts OCR microservice on **http://localhost:5001**
 
 ---
 
 ### 3. OCR Microservice — Python Flask
 
+Manual start (optional, only if not using backend auto-start):
+
 ```bash
 cd backend/ocr_service
 python3 -m venv venv
 venv/bin/pip install -r requirements.txt
-venv/bin/python app.py
+venv/bin/gunicorn app:app --bind 0.0.0.0:5001
 ```
 
 Runs on **http://localhost:5001**  
