@@ -37,6 +37,7 @@ MoneyMap/
 │       └── services/api.js    # Axios calls to Node backend
 │
 ├── backend/                   # Node.js Express API (port 5000)
+│   ├── .env.example           # Environment variable template
 │   ├── controllers/           # Route handlers (auth, expenses, receipts)
 │   ├── routes/                # Express routers
 │   ├── middleware/            # JWT auth middleware
@@ -53,167 +54,102 @@ MoneyMap/
 
 ### Prerequisites
 
-- Node.js ≥ 18
-- PostgreSQL
-- Python ≥ 3.10
-- Tesseract OCR binary — `sudo apt install tesseract-ocr` (Ubuntu/Debian)
+- **Node.js** 18+ and npm
+- **Python** 3.10+
+- **PostgreSQL** (running locally)
+- **Tesseract OCR** (system package — required by the Python OCR service)
 
----
+```bash
+# Ubuntu / Debian
+sudo apt update && sudo apt install -y tesseract-ocr
 
-### 1. Clone the repo
+# macOS
+brew install tesseract
+```
+
+### 1. Clone and install dependencies
 
 ```bash
 git clone https://github.com/TenathDilusha/MoneyMap.git
 cd MoneyMap
-```
 
----
+# Frontend
+cd frontend && npm install && cd ..
 
-### 2. Backend — Node.js API
+# Backend API
+cd backend && npm install && cd ..
 
-```bash
-cd backend
-npm install
-```
-
-Install OCR Python dependencies once (required for backend auto-start):
-
-```bash
-cd ocr_service
-python3 -m venv venv
-venv/bin/pip install -r requirements.txt
-cd ..
-```
-
-Create `backend/.env`:
-
-```env
-DATABASE_URL=postgresql://user:password@localhost:5432/moneymap
-JWT_SECRET=your_jwt_secret_here
-NODE_ENV=development
-```
-
-Start the server:
-
-```bash
-node server.js       
-```
-
-Runs on **http://localhost:5000**
-Also auto-starts OCR microservice on **http://localhost:5001**
-
----
-
-### 3. OCR Microservice — Python Flask
-
-Manual start (optional, only if not using backend auto-start):
-
-```bash
+# OCR microservice (Python virtualenv)
 cd backend/ocr_service
 python3 -m venv venv
 venv/bin/pip install -r requirements.txt
-venv/bin/gunicorn app:app --bind 0.0.0.0:5001
+cd ../..
 ```
 
-Runs on **http://localhost:5001**  
-The Node backend proxies receipt images to this service automatically.
+### 2. Configure environment
 
----
+Copy the example env file and edit it with your values:
 
-### 4. Frontend — React + Vite
+```bash
+cd backend
+cp .env.example .env
+```
+
+Required variables in `backend/.env`:
+
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | Random string for signing session cookies (`openssl rand -base64 32`) |
+
+Optional variables (defaults shown in `.env.example`):
+
+| Variable | Default | Description |
+|---|---|---|
+| `NODE_ENV` | `development` | Set to `production` for secure HTTPS-only cookies |
+| `PORT` | `5000` | Node API port |
+| `OCR_BIND` | `0.0.0.0:5001` | Gunicorn bind address for OCR |
+| `OCR_SERVICE_URL` | `http://localhost:5001` | URL the API uses to reach OCR |
+
+Ensure the PostgreSQL database exists before starting the backend:
+
+```bash
+createdb moneymap
+```
+
+### 3. Run the app
+
+Use **two terminals** — the backend starts both the API and OCR service together.
+
+**Terminal 1 — Backend (API on :5000, OCR on :5001)**
+
+```bash
+cd backend
+node server.js
+```
+
+Expected output:
+
+```
+Starting OCR microservice: .../venv/bin/gunicorn app:app --bind 0.0.0.0:5001
+Server running on port 5000
+Database connected successfully!
+[INFO] Listening at: http://0.0.0.0:5001
+```
+
+**Terminal 2 — Frontend (Vite on :5173)**
 
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 
-Runs on **http://localhost:5173**
+Open [http://localhost:5173](http://localhost:5173).
 
----
+### Ports
 
-## 🔑 Environment Variables
-
-| File | Variable | Description |
-|---|---|---|
-| `backend/.env` | `DATABASE_URL` | PostgreSQL connection string |
-| `backend/.env` | `JWT_SECRET` | Secret key for JWT signing |
-| `backend/.env` | `NODE_ENV` | `development` or `production` |
-| `backend/.env` | `OCR_SERVICE_URL` | OCR microservice URL (default: `http://localhost:5001`) |
-
----
-
-## 🧾 Receipt Scanner Flow
-
-```
-Browser
-  │  POST /api/receipts/scan  (multipart image)
-  ▼
-Node.js backend  (multer saves temp file)
-  │  POST /scan  (forwards image)
-  ▼
-Python Flask OCR service
-  │  pytesseract → raw text → parse storeName / date / total / items
-  ▼
-Structured JSON  →  Node  →  Browser
-  │
-  ▼
-Editable review popup  →  pre-fills AddTransaction modal
-```
-
----
-
-## 📡 API Endpoints
-
-### Auth  `/api/auth`
-| Method | Path | Description |
-|---|---|---|
-| POST | `/register` | Create account |
-| POST | `/login` | Login, sets JWT cookie |
-| POST | `/oauth` | Firebase OAuth sign-in |
-| GET  | `/me` | Get current user |
-| POST | `/logout` | Clear session cookie |
-
-### Expenses  `/api/expenses`
-| Method | Path | Description |
-|---|---|---|
-| GET    | `/` | List all transactions |
-| POST   | `/` | Add transaction |
-| PUT    | `/:id` | Edit transaction |
-| DELETE | `/:id` | Delete transaction |
-
-### Receipts  `/api/receipts`
-| Method | Path | Description |
-|---|---|---|
-| POST | `/scan` | Upload receipt image → returns extracted data |
-
----
-
-## 🛠️ Database
-
-Run this SQL to create the required tables:
-
-```sql
-CREATE TABLE users (
-  id       SERIAL PRIMARY KEY,
-  username VARCHAR(100) NOT NULL,
-  email    VARCHAR(150) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL
-);
-
-CREATE TABLE expenses (
-  id          SERIAL PRIMARY KEY,
-  user_id     INTEGER REFERENCES users(id) ON DELETE CASCADE,
-  type        VARCHAR(10)  NOT NULL DEFAULT 'expense',
-  description TEXT,
-  amount      NUMERIC(12,2) NOT NULL,
-  category    VARCHAR(50),
-  date        DATE NOT NULL
-);
-```
-
----
-
-## 📜 License
-
-MIT
+| Service | Port |
+|---|---|
+| React frontend (Vite) | 5173 |
+| Node.js API | 5000 |
+| Python OCR (Gunicorn) | 5001 |
