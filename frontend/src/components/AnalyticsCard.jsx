@@ -47,11 +47,11 @@ export default function AnalyticsCard({ monthlyData }) {
         </div>
         <div style={{ display: 'flex', gap: 14, fontSize: 12 }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)' }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#00d37f', display: 'inline-block' }} />
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#059669', display: 'inline-block' }} />
             Income
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-secondary)' }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#ff4d6d', display: 'inline-block' }} />
+            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#e11d48', display: 'inline-block' }} />
             Expenses
           </span>
         </div>
@@ -62,8 +62,8 @@ export default function AnalyticsCard({ monthlyData }) {
           <XAxis dataKey="month" axisLine={false} tickLine={false} />
           <YAxis axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={55} />
           <Tooltip content={<CustomTooltip />} />
-          <Bar dataKey="income" name="Income" fill="#00d37f" radius={[5, 5, 0, 0]} />
-          <Bar dataKey="expense" name="Expenses" fill="#ff4d6d" radius={[5, 5, 0, 0]} />
+          <Bar dataKey="income" name="Income" fill="#059669" radius={[5, 5, 0, 0]} />
+          <Bar dataKey="expense" name="Expenses" fill="#e11d48" radius={[5, 5, 0, 0]} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>

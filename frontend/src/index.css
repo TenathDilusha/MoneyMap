@@ -1,24 +1,24 @@
-/* ── CSS Variables ── */
+/* ── CSS Variables (light theme) ── */
 :root {
-  --bg-primary: #0f1117;
-  --bg-secondary: #1a1d27;
-  --bg-card: #1e2132;
-  --bg-card-hover: #252840;
-  --bg-sidebar: #13151f;
-  --accent-green: #00d37f;
-  --accent-green-dim: #00b36b;
-  --accent-green-glow: rgba(0, 211, 127, 0.15);
-  --accent-red: #ff4d6d;
-  --accent-red-dim: #e0395a;
-  --accent-blue: #4d79ff;
-  --accent-yellow: #ffd166;
-  --accent-purple: #b57bee;
-  --text-primary: #e8eaf0;
-  --text-secondary: #8b8fa8;
-  --text-muted: #5a5e75;
-  --border: rgba(255, 255, 255, 0.07);
-  --border-active: rgba(0, 211, 127, 0.4);
-  --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --bg-primary: #f4f6f9;
+  --bg-secondary: #eef1f6;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f2f7;
+  --bg-sidebar: #ffffff;
+  --accent-green: #059669;
+  --accent-green-dim: #047857;
+  --accent-green-glow: rgba(5, 150, 105, 0.12);
+  --accent-red: #e11d48;
+  --accent-red-dim: #be123c;
+  --accent-blue: #2563eb;
+  --accent-yellow: #d97706;
+  --accent-purple: #9333ea;
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(5, 150, 105, 0.45);
+  --shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
   --radius: 16px;
   --radius-sm: 10px;
 }
@@ -168,7 +168,7 @@ body {
   box-shadow: var(--shadow);
   transition: transform 0.2s, box-shadow 0.2s;
 }
-.summary-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.summary-card:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
 .summary-card::before {
   content: '';
   position: absolute;
@@ -308,7 +308,7 @@ body {
 }
 .btn-primary {
   background: var(--accent-green);
-  color: #0f1117;
+  color: #ffffff;
 }
 .btn-primary:hover { background: var(--accent-green-dim); transform: translateY(-1px); }
 .btn-outline {
@@ -328,7 +328,7 @@ body {
 /* ── Modal ── */
 .modal-backdrop {
   position: fixed; inset: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.4);
   backdrop-filter: blur(6px);
   z-index: 1000;
   display: flex; align-items: center; justify-content: center;
@@ -341,7 +341,7 @@ body {
   padding: 28px;
   width: 100%;
   max-width: 460px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.12);
   animation: slideUp 0.25s ease;
 }
 @keyframes slideUp {
@@ -455,7 +455,7 @@ body {
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg-card); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
 
 /* ── Recharts overrides ── */
 .recharts-tooltip-wrapper { outline: none; }
@@ -491,8 +491,8 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--bg-primary);
-  background-image: radial-gradient(ellipse at 20% 50%, rgba(0, 211, 127, 0.06) 0%, transparent 60%),
-                    radial-gradient(ellipse at 80% 20%, rgba(77, 121, 255, 0.06) 0%, transparent 60%);
+  background-image: radial-gradient(ellipse at 20% 50%, rgba(5, 150, 105, 0.08) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 20%, rgba(37, 99, 235, 0.08) 0%, transparent 60%);
   padding: 24px;
 }
 
@@ -503,7 +503,7 @@ body {
   padding: 40px 36px;
   width: 100%;
   max-width: 440px;
-  box-shadow: var(--shadow), 0 0 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow), 0 0 40px rgba(0, 0, 0, 0.06);
 }
 
 .auth-logo {
@@ -595,7 +595,7 @@ body {
   margin-top: 4px;
   padding: 12px;
   background: var(--accent-green);
-  color: #0f1117;
+  color: #ffffff;
   font-size: 14px;
   font-weight: 600;
   border: none;
@@ -614,8 +614,8 @@ body {
 .auth-spinner {
   width: 18px;
   height: 18px;
-  border: 2px solid rgba(0, 0, 0, 0.2);
-  border-top-color: #0f1117;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
   border-radius: 50%;
   animation: auth-spin 0.7s linear infinite;
   display: inline-block;
@@ -662,7 +662,7 @@ body {
 }
 .auth-oauth-btn:hover {
   background: var(--bg-card-hover);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .auth-switch {

@@ -66,7 +66,7 @@ const confirmLogout = async () => {
 			{showConfirm && (
 				<div style={{
 					position: "fixed", inset: 0,
-					background: "rgba(0,0,0,0.6)",
+					background: "rgba(0,0,0,0.4)",
 					backdropFilter: "blur(4px)",
 					display: "flex", alignItems: "center", justifyContent: "center",
 					zIndex: 1000,
