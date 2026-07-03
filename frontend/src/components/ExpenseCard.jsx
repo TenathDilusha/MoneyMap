@@ -1,6 +1,6 @@
 import { CATEGORY_META, fmt } from '../services/api';
 
-const COLORS = ['#00d37f', '#4d79ff', '#ffd166', '#ff4d6d', '#b57bee', '#fd5d5d', '#34d399', '#fb923c'];
+const COLORS = ['#059669', '#2563eb', '#d97706', '#e11d48', '#9333ea', '#dc2626', '#10b981', '#ea580c'];
 
 export default function ExpenseCard({ breakdown }) {
   if (!breakdown || breakdown.length === 0) {
